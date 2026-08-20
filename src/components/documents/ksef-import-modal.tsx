@@ -115,9 +115,9 @@ export function KsefImportModal({ open, onClose }: { open: boolean; onClose: () 
 
         {summary ? (
           <div className="grid grid-cols-3 gap-2">
-            <SummaryTile label="Zwrócone przez KSeF" value={summary.fetched} />
-            <SummaryTile label="Dodane do bufora" value={summary.imported} tone="success" />
-            <SummaryTile label="Pominięte duplikaty" value={summary.duplicates} tone="muted" />
+            <SummaryTile label="Zwrócone przez KSeF" value={summary.fetched} testId="ksef-fetched" />
+            <SummaryTile label="Dodane do bufora" value={summary.imported} tone="success" testId="ksef-imported" />
+            <SummaryTile label="Pominięte duplikaty" value={summary.duplicates} tone="muted" testId="ksef-duplicates" />
             {summary.createdCounterparties > 0 ? (
               <p className="col-span-3 text-[12.5px] text-fg-muted">
                 Założono {summary.createdCounterparties}{" "}
@@ -135,16 +135,21 @@ function SummaryTile({
   label,
   value,
   tone = "default",
+  testId,
 }: {
   label: string;
   value: number;
   tone?: "default" | "success" | "muted";
+  /** Sama liczba nie ma dostępnej nazwy — identyfikator daje ją testom e2e. */
+  testId?: string;
 }) {
   const toneClass =
     tone === "success" ? "text-success" : tone === "muted" ? "text-fg-subtle" : "text-fg";
   return (
     <div className="rounded-xl border border-border bg-surface-2 px-3 py-2.5">
-      <div className={`tnum text-[18px] font-semibold ${toneClass}`}>{value}</div>
+      <div className={`tnum text-[18px] font-semibold ${toneClass}`} data-testid={testId}>
+        {value}
+      </div>
       <div className="mt-0.5 text-[11.5px] leading-tight text-fg-subtle">{label}</div>
     </div>
   );

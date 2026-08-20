@@ -15,6 +15,13 @@ const eslintConfig = [
     ignores: [
       "node_modules/**",
       ".next/**",
+      // Katalog budowania testów e2e i artefakty Playwrighta — kod generowany,
+      // nie nasz.
+      ".next-e2e/**",
+      "test-results/**",
+      "playwright-report/**",
+      // Klient Prismy powstaje z `prisma generate`.
+      "src/generated/**",
       "out/**",
       "build/**",
       "next-env.d.ts",
