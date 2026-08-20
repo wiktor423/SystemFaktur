@@ -10,7 +10,7 @@
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/db";
 import { KsefError, type KsefInvoice, type KsefInvoiceLine } from "@/lib/ksef/client";
-import { getKsefClient } from "@/lib/ksef/mock-client";
+import { getKsefClient } from "@/server/ksef/factory";
 import type { KsefFetchScope, KsefRunTrigger } from "@/lib/domain/types";
 import { stripSeparators } from "@/lib/domain/validation";
 import { toDb } from "@/server/enums";
