@@ -32,6 +32,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # vercel
 .vercel
@@ -42,3 +43,10 @@ next-env.d.ts
 
 # sekrety lokalne (certyfikat KSeF, klucze)
 secrets/
+
+/src/generated/prisma
+
+# pliki pomocnicze narzędzi AI (instalowane przez prisma init)
+/.agents/
+/.windsurf/
+skills-lock.json

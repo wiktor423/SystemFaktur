@@ -1,0 +1,309 @@
+// Schemat bazy modułu faktur.
+//
+// Zasada przewodnia: reguły, których złamanie psuje dane, są ograniczeniami
+// bazy, a nie tylko warunkami w kodzie. Dotyczy to przede wszystkim
+// deduplikacji faktur i idempotencji harmonogramu — przy wielu replikach
+// aplikacji sprawdzenie „czy istnieje, jeśli nie to wstaw" w kodzie
+// przepuszcza duplikaty, a unikalny indeks nie.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// --- Słowniki ---------------------------------------------------------------
+
+/// Kierunek dokumentu: należność (do otrzymania) albo zobowiązanie (do zapłaty).
+enum DocumentDirection {
+  RECEIVABLE
+  PAYABLE
+}
+
+/// Skąd dokument trafił do systemu.
+enum DocumentSource {
+  KSEF
+  UPLOAD
+  MANUAL
+}
+
+/// Etap obiegu. Bufor jest stanem dokumentu, nie osobnym bytem — dzięki temu
+/// akceptacja nie przepisuje rekordu i nie gubi powiązań (załącznik, pozycje).
+enum DocumentStage {
+  BUFFER
+  REGISTERED
+}
+
+enum BufferDecision {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+enum PaymentStatus {
+  UNPAID
+  PARTIAL
+  PAID
+}
+
+enum AttachmentKind {
+  PDF
+  XML
+}
+
+/// Rodzaj faktur pobieranych z KSeF (kosztowe / sprzedażowe / oba).
+enum KsefFetchScope {
+  PURCHASE
+  SALE
+  BOTH
+}
+
+enum KsefRunTrigger {
+  MANUAL
+  SCHEDULE
+}
+
+enum KsefRunStatus {
+  RUNNING
+  SUCCESS
+  PARTIAL
+  ERROR
+}
+
+// --- Model domenowy ---------------------------------------------------------
+
+model DocumentType {
+  id        String            @id @default(cuid())
+  name      String            @unique
+  shortName String            @db.VarChar(8)
+  direction DocumentDirection
+  /// Typy systemowe (faktura sprzedażowa / kosztowa) nie mogą zostać usunięte.
+  isSystem  Boolean           @default(false)
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+
+  documents Document[]
+
+  @@map("document_types")
+}
+
+model Category {
+  id       String  @id @default(cuid())
+  name     String
+  /// Kolor znacznika na liście — czysto prezentacyjny.
+  color    String? @db.VarChar(16)
+  parentId String?
+
+  parent   Category?  @relation("CategoryTree", fields: [parentId], references: [id], onDelete: Restrict)
+  children Category[] @relation("CategoryTree")
+
+  documents      Document[]
+  counterparties Counterparty[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  /// Rodzeństwo nie może się powtarzać; NULL w parentId nie blokuje
+  /// duplikatów na poziomie głównym, więc dochodzi indeks częściowy w migracji.
+  @@unique([parentId, name])
+  @@index([parentId])
+  @@map("categories")
+}
+
+model Counterparty {
+  id   String @id @default(cuid())
+  name String
+  /// Wyłącznie cyfry — separatory zdejmujemy przed zapisem, żeby NIP z faktury
+  /// i NIP z formularza dawały ten sam klucz.
+  nip  String @unique @db.VarChar(10)
+
+  street     String?
+  postalCode String? @db.VarChar(12)
+  city       String?
+  country    String  @default("PL") @db.VarChar(2)
+
+  /// NRB/IBAN bez separatorów.
+  bankAccount String? @db.VarChar(34)
+
+  /// Reguła auto-kategoryzacji: dokumenty tego kontrahenta trafiają tutaj.
+  defaultCategoryId String?
+  defaultCategory   Category? @relation(fields: [defaultCategoryId], references: [id], onDelete: SetNull)
+
+  documents Document[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([name])
+  @@map("counterparties")
+}
+
+model Document {
+  id     String @id @default(cuid())
+  number String
+
+  typeId         String
+  type           DocumentType @relation(fields: [typeId], references: [id], onDelete: Restrict)
+  counterpartyId String
+  counterparty   Counterparty @relation(fields: [counterpartyId], references: [id], onDelete: Restrict)
+
+  issueDate DateTime  @db.Date
+  saleDate  DateTime? @db.Date
+  dueDate   DateTime  @db.Date
+
+  /// Kwoty jako Decimal — float na pieniądzach gubi grosze przy sumowaniu.
+  netAmount   Decimal @db.Decimal(14, 2)
+  vatAmount   Decimal @db.Decimal(14, 2)
+  grossAmount Decimal @db.Decimal(14, 2)
+  currency    String  @default("PLN") @db.VarChar(3)
+
+  /// Rachunek do zapłaty z faktury — nie z kartoteki kontrahenta.
+  paymentAccount String? @db.VarChar(34)
+
+  categoryId           String?
+  category             Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  /// Czy kategorię przypisała reguła „kontrahent → kategoria”. Ręczny wybór
+  /// ma pierwszeństwo, więc reguła nie nadpisuje wartości ustawionej ręcznie.
+  categoryAutoAssigned Boolean   @default(false)
+
+  source     DocumentSource
+  /// Numer KSeF jest globalnie unikalny — to najmocniejszy klucz deduplikacji.
+  ksefNumber String?        @unique @db.VarChar(64)
+
+  stage          DocumentStage  @default(BUFFER)
+  bufferDecision BufferDecision @default(PENDING)
+  paymentStatus  PaymentStatus  @default(UNPAID)
+
+  notes String?
+
+  attachment Attachment?
+  lines      InvoiceLine[]
+
+  receivedAt   DateTime  @default(now())
+  registeredAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  /// Druga bariera deduplikacji, wymagana wprost przez zadanie: ten sam
+  /// numer faktury u tego samego kontrahenta nie może powstać dwukrotnie.
+  /// Obejmuje wszystkie źródła — KSeF, upload i dodanie ręczne.
+  @@unique([counterpartyId, number])
+  @@index([issueDate])
+  @@index([dueDate])
+  @@index([stage, issueDate])
+  @@index([categoryId])
+  @@index([typeId])
+  @@map("documents")
+}
+
+model InvoiceLine {
+  id         String   @id @default(cuid())
+  documentId String
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  /// Kolejność pozycji na fakturze (NrWierszaFa w FA(3)).
+  position     Int
+  name         String
+  quantity     Decimal @db.Decimal(14, 3)
+  unit         String  @db.VarChar(16)
+  unitNetPrice Decimal @db.Decimal(14, 2)
+  vatRate      Decimal @db.Decimal(5, 2)
+  netAmount    Decimal @db.Decimal(14, 2)
+  vatAmount    Decimal @db.Decimal(14, 2)
+  grossAmount  Decimal @db.Decimal(14, 2)
+
+  @@unique([documentId, position])
+  @@map("invoice_lines")
+}
+
+model Attachment {
+  id         String   @id @default(cuid())
+  /// Jeden załącznik na dokument — plik źródłowy (PDF albo XML KSeF).
+  documentId String   @unique
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  kind        AttachmentKind
+  filename    String
+  contentType String         @db.VarChar(128)
+  size        Int
+  /// Treść pliku w bazie. Świadomy kompromis na tę skalę — patrz README.
+  content     Bytes
+
+  createdAt DateTime @default(now())
+
+  @@map("attachments")
+}
+
+// --- Integracja z KSeF ------------------------------------------------------
+
+/// Harmonogram automatycznego pobierania. Jeden wiersz na instalację —
+/// wymuszony przez `singleton`, żeby nie dało się utworzyć drugiego.
+model KsefSchedule {
+  singleton    Boolean        @id @default(true)
+  enabled      Boolean        @default(false)
+  /// Godziny uruchomień „HH:mm”, dowolna liczba w ciągu doby.
+  times        String[]
+  scope        KsefFetchScope @default(BOTH)
+  lookbackDays Int            @default(7)
+
+  updatedAt DateTime @updatedAt
+
+  @@map("ksef_schedule")
+}
+
+/// Historia pobrań — jednocześnie mechanizm idempotencji harmonogramu.
+model KsefRun {
+  id        String         @id @default(cuid())
+  trigger   KsefRunTrigger
+  scope     KsefFetchScope
+  dateFrom  DateTime       @db.Date
+  dateTo    DateTime       @db.Date
+  status    KsefRunStatus  @default(RUNNING)
+
+  fetched    Int @default(0)
+  imported   Int @default(0)
+  duplicates Int @default(0)
+
+  message String?
+
+  /// Zaplanowany moment uruchomienia. Razem z `jobName` tworzy klucz
+  /// unikalny: przy wielu replikach aplikacji drugą próbę tego samego
+  /// przebiegu baza odrzuca błędem P2002, zamiast pobierać faktury dwa razy.
+  /// NULL dla uruchomień ręcznych — te mogą się powtarzać.
+  jobName     String?   @db.VarChar(64)
+  scheduledFor DateTime?
+
+  startedAt  DateTime  @default(now())
+  finishedAt DateTime?
+
+  @@unique([jobName, scheduledFor])
+  @@index([startedAt])
+  @@map("ksef_runs")
+}
+
+/// Znacznik przyrostowego pobierania (high-water mark) zwracany przez KSeF.
+/// Pozwala pytać „daj wszystko od tego momentu" zamiast odpytywać w kółko
+/// ten sam zakres dat i odsiewać duplikaty po stronie aplikacji.
+model KsefCursor {
+  scope     KsefFetchScope @id
+  hwmDate   DateTime?
+  updatedAt DateTime       @updatedAt
+
+  @@map("ksef_cursors")
+}
+
+// --- Ustawienia interfejsu --------------------------------------------------
+
+/// Konfiguracja kolumn rejestru (widoczność i kolejność). Tryb jednego
+/// użytkownika, więc jeden wiersz na instalację.
+model ColumnPreference {
+  key       String  @id @db.VarChar(32)
+  visible   Boolean @default(true)
+  position  Int
+
+  @@map("column_preferences")
+}
