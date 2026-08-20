@@ -4,7 +4,7 @@ Aplikacja do ewidencji faktur kosztowych i sprzedażowych: rejestr z filtrowanie
 i konfigurowalnymi kolumnami, pobieranie z KSeF do bufora akceptacyjnego,
 kategoryzacja z regułami automatycznymi i podgląd dokumentów w przeglądarce.
 
-**Wdrożona wersja:** _(uzupełnić po wdrożeniu — patrz [`docs/wdrozenie.md`](docs/wdrozenie.md))_
+**Wdrożona wersja:** https://lexalpha.onrender.com/
 
 Integracja z KSeF jest **prawdziwa**, nie zasymulowana. Aplikacja uwierzytelnia
 się w środowisku testowym Ministerstwa Finansów i pobiera stamtąd faktury FA(3),
