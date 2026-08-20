@@ -2,7 +2,7 @@ const NS = "http://crd.gov.pl/wzor/2025/06/25/13775/";
 const money = (n) => n.toFixed(2);
 
 /** Buduje fakturę FA(3) zgodną ze schematem `schemat_FA(3)_v1-0E.xsd`. */
-export function buildFa3({ seller, buyer, number, issueDate, dueDate, place, lines, bankAccount }) {
+export function buildFa3({ seller, buyer, number, issueDate, dueDate, lines, bankAccount }) {
   const net = lines.reduce((sum, l) => sum + l.quantity * l.unitPrice, 0);
   const vat = lines.reduce((sum, l) => sum + l.quantity * l.unitPrice * (l.vatRate / 100), 0);
   const gross = net + vat;

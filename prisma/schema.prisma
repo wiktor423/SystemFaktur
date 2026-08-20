@@ -250,6 +250,11 @@ model KsefSchedule {
   scope        KsefFetchScope @default(BOTH)
   lookbackDays Int            @default(7)
 
+  /// Wymusza blad przy nastepnym pobraniu. Sluzy do pokazania, ze nieudana
+  /// integracja nie gubi danych ani nie tworzy duplikatow - trzymane w bazie,
+  /// bo przelacznik ma dzialac takze dla przebiegow z harmonogramu.
+  simulateFailure Boolean @default(false)
+
   updatedAt DateTime @updatedAt
 
   @@map("ksef_schedule")

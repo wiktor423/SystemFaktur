@@ -130,6 +130,8 @@ export interface KsefSchedule {
   scope: KsefFetchScope;
   /** Ile dni wstecz obejmuje automatyczne pobranie. */
   lookbackDays: number;
+  /** Wymusza błąd przy następnym pobraniu — do demonstracji obsługi awarii. */
+  simulateFailure: boolean;
 }
 
 /** Rodzaj faktur do pobrania z KSeF. */

@@ -37,18 +37,14 @@ export default function CounterpartiesPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const categoryOptions = useMemo(
-    () => flattenCategoryTree(buildCategoryTree(state.categories, state.documents)),
-    [state.categories, state.documents],
+    () => flattenCategoryTree(buildCategoryTree(state.categories, state.usage.byCategory)),
+    [state.categories, state.usage.byCategory],
   );
 
   const rows = useMemo(() => {
-    const stats = new Map<string, { count: number; amount: number }>();
-    for (const document of state.documents) {
-      const entry = stats.get(document.counterpartyId) ?? { count: 0, amount: 0 };
-      entry.count += 1;
-      if (document.currency === "PLN") entry.amount += document.grossAmount;
-      stats.set(document.counterpartyId, entry);
-    }
+    // Liczba dokumentow i obrot przychodza gotowe z agregatu bazy - kartoteka
+    // nie potrzebuje calego rejestru w pamieci, zeby pokazac te dwie liczby.
+    const stats = state.usage.byCounterparty;
 
     const needle = query.trim().toLowerCase();
     return [...state.counterparties]
@@ -65,7 +61,7 @@ export default function CounterpartiesPage() {
         nipValid: validateNip(counterparty.nip).valid,
         accountValid: counterparty.bankAccount ? validateBankAccount(counterparty.bankAccount).valid : null,
       }));
-  }, [state.counterparties, state.documents, query]);
+  }, [state.counterparties, state.usage.byCounterparty, query]);
 
   const save = () => {
     if (!editing) return;

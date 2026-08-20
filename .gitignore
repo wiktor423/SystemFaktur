@@ -47,6 +47,7 @@ secrets/
 /src/generated/prisma
 
 # pliki pomocnicze narzędzi AI (instalowane przez prisma init)
+/.claude/skills/
 /.agents/
 /.windsurf/
 skills-lock.json

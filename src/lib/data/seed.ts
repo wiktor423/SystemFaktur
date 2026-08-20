@@ -106,6 +106,13 @@ export const seedDocumentTypes: DocumentType[] = [
 
 /* -------------------------------- Kontrahenci ------------------------------ */
 
+/**
+ * Kartoteka kontrahentow. NIP-y szesciu podmiotow odpowiadaja firmom realnie
+ * zarejestrowanym w naszej piaskownicy KSeF (patrz
+ * `src/lib/ksef/__fixtures__/sandbox-parties.json`) - dzieki temu import
+ * z KSeF trafia na istniejaca kartoteke zamiast zakladac druga dla tej
+ * samej firmy.
+ */
 export const seedCounterparties: Counterparty[] = [
   {
     id: "cp-owoce-beskid",
@@ -118,7 +125,7 @@ export const seedCounterparties: Counterparty[] = [
   {
     id: "cp-cukrownia",
     name: "Cukrownia Nadwiślańska S.A.",
-    nip: "8832437786",
+    nip: "9430928608",
     address: { street: "Fabryczna 3", postalCode: "87-100", city: "Toruń", country: "PL" },
     bankAccount: "PL09896468506185741940188577",
     defaultCategoryId: "cat-cukier",
@@ -126,7 +133,7 @@ export const seedCounterparties: Counterparty[] = [
   {
     id: "cp-pakpol",
     name: "PakPol Opakowania sp. z o.o.",
-    nip: "1453853991",
+    nip: "2650866478",
     address: { street: "Przemysłowa 22", postalCode: "05-800", city: "Pruszków", country: "PL" },
     bankAccount: "PL72065624890916508908017151",
     defaultCategoryId: "cat-opakowania",
@@ -134,7 +141,7 @@ export const seedCounterparties: Counterparty[] = [
   {
     id: "cp-chlodtrans",
     name: "ChłodTrans Logistyka sp.j.",
-    nip: "9963079626",
+    nip: "4291146318",
     address: { street: "Spedycyjna 8", postalCode: "43-300", city: "Bielsko-Biała", country: "PL" },
     bankAccount: "PL58722042510956488754006162",
     defaultCategoryId: "cat-chlodnia",
@@ -190,7 +197,7 @@ export const seedCounterparties: Counterparty[] = [
   {
     id: "cp-siecdelikatesy",
     name: "Delikatesy Południe S.A.",
-    nip: "4282029984",
+    nip: "5455943157",
     address: { street: "Handlowa 100", postalCode: "40-100", city: "Katowice", country: "PL" },
     bankAccount: "PL24897717449617116850122240",
     defaultCategoryId: "cat-sieci",
@@ -198,7 +205,7 @@ export const seedCounterparties: Counterparty[] = [
   {
     id: "cp-cukiernia",
     name: "Cukiernia Pod Jagodą Anna Malinowska",
-    nip: "6453444120",
+    nip: "3232624106",
     address: { street: "Floriańska 18", postalCode: "31-019", city: "Kraków", country: "PL" },
     bankAccount: "PL90379221021732876919374525",
     defaultCategoryId: "cat-horeca",
@@ -206,7 +213,7 @@ export const seedCounterparties: Counterparty[] = [
   {
     id: "cp-marketwit",
     name: "MarketWit Sieci Handlowe sp. z o.o.",
-    nip: "2792303928",
+    nip: "7850931102",
     address: { street: "Aleja Zwycięstwa 210", postalCode: "81-521", city: "Gdynia", country: "PL" },
     bankAccount: "PL16929254723062683557214900",
     defaultCategoryId: "cat-sieci",
@@ -471,6 +478,7 @@ export const seedSchedule: KsefSchedule = {
   times: ["01:00", "07:30", "13:00", "19:30"],
   scope: "both",
   lookbackDays: 3,
+  simulateFailure: false,
 };
 
 export const seedKsefRuns: KsefRun[] = [

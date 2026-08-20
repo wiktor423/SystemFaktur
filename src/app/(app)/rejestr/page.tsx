@@ -14,24 +14,18 @@ import { Drawer } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/misc";
 import { useToast } from "@/components/ui/toast";
-import { useAppData } from "@/lib/data/store";
-import {
-  buildLookups,
-  computeStats,
-  emptyFilters,
-  filterDocuments,
-  sortDocuments,
-} from "@/lib/data/queries";
+import { useAppData, useDocumentQuery } from "@/lib/data/store";
+import { buildLookups, countActiveFilters, emptyFilters } from "@/lib/data/queries";
 import type { DocumentFilters, InvoiceDocument, SortState } from "@/lib/domain/types";
 import { formatDate } from "@/lib/format";
 
 /**
  * Rejestr dokumentów — centralny widok modułu.
  *
- * Strona odpowiada wyłącznie za stan interfejsu (filtry, sortowanie, zaznaczenie,
- * otwarte panele). Filtrowanie i sortowanie wykonują czyste funkcje z
- * `lib/data/queries`, więc po podpięciu backendu wystarczy przenieść je do
- * zapytania SQL bez zmiany zachowania widoku.
+ * Strona odpowiada wyłącznie za stan interfejsu: filtry, sortowanie,
+ * zaznaczenie i otwarte panele. Samo wyszukiwanie wykonuje baza — strona
+ * przekazuje kryteria do `useDocumentQuery` i dostaje gotową stronę wyników
+ * wraz z podsumowaniem liczonym dla całego dopasowania, nie dla widoku.
  */
 export default function RegisterPage() {
   const { state, deleteDocuments, setColumns } = useAppData();
@@ -51,24 +45,13 @@ export default function RegisterPage() {
     [state.counterparties, state.categories, state.documentTypes],
   );
 
-  const registered = useMemo(
-    () => state.documents.filter((document) => document.stage === "registered"),
-    [state.documents],
-  );
-
-  const filtered = useMemo(
-    () => filterDocuments(registered, filters, lookups, state.categories),
-    [registered, filters, lookups, state.categories],
-  );
-
-  const sorted = useMemo(() => sortDocuments(filtered, sort, lookups), [filtered, sort, lookups]);
-
-  const paged = useMemo(
-    () => sorted.slice(page * pageSize, (page + 1) * pageSize),
-    [sorted, page, pageSize],
-  );
-
-  const stats = useMemo(() => computeStats(filtered, state.documentTypes), [filtered, state.documentTypes]);
+  const { documents: paged, total, stats, loading } = useDocumentQuery({
+    filters,
+    sort,
+    page: page + 1,
+    pageSize,
+    stage: "registered",
+  });
 
   const visibleColumnKeys = useMemo(
     () => state.columns.filter((column) => column.visible).map((column) => column.key),
@@ -82,16 +65,19 @@ export default function RegisterPage() {
     setPage(0);
   };
 
+  // Podglad trzyma wlasna kopie dokumentu, wiec po odswiezeniu listy
+  // bierzemy swiezsza wersje, jesli wciaz jest w wyniku.
   const currentPreview = previewDocument
-    ? (state.documents.find((document) => document.id === previewDocument.id) ?? null)
+    ? (paged.find((document) => document.id === previewDocument.id) ?? previewDocument)
     : null;
 
-  const removeSelected = () => {
+  const removeSelected = async () => {
     const ids = [...selectedIds];
-    const result = deleteDocuments(ids);
+    const result = await deleteDocuments(ids);
     setSelectedIds(new Set());
     if (currentPreview && ids.includes(currentPreview.id)) setPreviewDocument(null);
-    toast.success(result.message);
+    if (result.ok) toast.success(result.message);
+    else toast.error("Nie usunięto dokumentów", result.message);
   };
 
   return (
@@ -138,6 +124,9 @@ export default function RegisterPage() {
         trailing={<ColumnSettings columns={state.columns} onChange={setColumns} />}
       />
 
+      {/* Wynik przychodzi z serwera, wiec przy zmianie filtrow tabela
+          na moment przygasa zamiast migac pusta lista. */}
+      <div aria-busy={loading} className={loading ? "opacity-60 transition-opacity" : "transition-opacity"}>
       <DocumentsTable
         documents={paged}
         columnKeys={visibleColumnKeys}
@@ -164,15 +153,16 @@ export default function RegisterPage() {
             label: "Usuń dokument",
             icon: <Trash2 className="size-3.5" aria-hidden />,
             tone: "danger",
-            onSelect: (document) => {
-              deleteDocuments([document.id]);
+            onSelect: async (document) => {
+              const result = await deleteDocuments([document.id]);
               if (currentPreview?.id === document.id) setPreviewDocument(null);
-              toast.success(`Usunięto dokument ${document.number}.`);
+              if (result.ok) toast.success(`Usunięto dokument ${document.number}.`);
+              else toast.error("Nie usunięto dokumentu", result.message);
             },
           },
         ]}
         emptyState={
-          registered.length === 0 ? (
+          countActiveFilters(filters) === 0 ? (
             <EmptyState
               icon={FileText}
               title="Rejestr jest pusty"
@@ -206,7 +196,7 @@ export default function RegisterPage() {
       />
 
       <TableFooter
-        total={sorted.length}
+        total={total}
         page={page}
         pageSize={pageSize}
         onPageChange={setPage}
@@ -216,6 +206,7 @@ export default function RegisterPage() {
         }}
         selectedCount={selectedIds.size}
       />
+      </div>
 
       <Drawer
         open={Boolean(currentPreview)}

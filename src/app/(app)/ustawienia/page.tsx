@@ -1,12 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Clock, KeyRound, Plus, RotateCcw, Trash2, X } from "lucide-react";
+import { Clock, KeyRound, Plus, Trash2, X } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select, Switch } from "@/components/ui/field";
 import { Panel, PanelHeader, SegmentedControl } from "@/components/ui/misc";
-import { Modal } from "@/components/ui/modal";
 import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/layout/theme";
 import { KsefRunsList, nextScheduledRun } from "@/components/documents/ksef-runs";
@@ -25,8 +24,6 @@ export default function SettingsPage() {
     addDocumentType,
     deleteDocumentType,
     updateSchedule,
-    setSimulateKsefFailure,
-    resetDemoData,
   } = useAppData();
   const toast = useToast();
 
@@ -34,21 +31,19 @@ export default function SettingsPage() {
   const [typeShort, setTypeShort] = useState("");
   const [typeDirection, setTypeDirection] = useState<DocumentDirection>("payable");
   const [newTime, setNewTime] = useState("03:00");
-  const [resetOpen, setResetOpen] = useState(false);
 
-  const usageByType = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const document of state.documents) {
-      counts.set(document.typeId, (counts.get(document.typeId) ?? 0) + 1);
-    }
-    return counts;
-  }, [state.documents]);
+  // Licznik uzycia typow przychodzi z agregatu bazy - strona ustawien nie
+  // ma powodu, zeby pobierac caly rejestr tylko po to, zeby policzyc wiersze.
+  const usageByType = useMemo(
+    () => new Map([...state.usage.byType].map(([id, entry]) => [id, entry.count])),
+    [state.usage.byType],
+  );
 
   const nextRun = useMemo(() => nextScheduledRun(state.schedule), [state.schedule]);
   const sortedTimes = useMemo(() => [...state.schedule.times].sort(), [state.schedule.times]);
 
-  const submitType = () => {
-    const result = addDocumentType({ name: typeName, shortName: typeShort, direction: typeDirection });
+  const submitType = async () => {
+    const result = await addDocumentType({ name: typeName, shortName: typeShort, direction: typeDirection });
     if (!result.ok) {
       toast.error(result.message);
       return;
@@ -110,8 +105,8 @@ export default function SettingsPage() {
                             ? "Typ jest używany przez dokumenty"
                             : "Usuń typ"
                       }
-                      onClick={() => {
-                        const result = deleteDocumentType(type.id);
+                      onClick={async () => {
+                        const result = await deleteDocumentType(type.id);
                         if (result.ok) toast.success(result.message);
                         else toast.error(result.message);
                       }}
@@ -300,7 +295,10 @@ export default function SettingsPage() {
                     ginie po nieudanej próbie.
                   </p>
                 </div>
-                <Switch checked={state.simulateKsefFailure} onChange={setSimulateKsefFailure} />
+                <Switch
+                  checked={state.schedule.simulateFailure}
+                  onChange={(simulateFailure) => void updateSchedule({ simulateFailure })}
+                />
               </div>
             </div>
           </Panel>
@@ -325,51 +323,21 @@ export default function SettingsPage() {
                 <ThemeToggle />
               </div>
 
-              <div className="flex items-center justify-between gap-4 border-t border-border pt-3">
+              <div className="flex items-start justify-between gap-4 border-t border-border pt-3">
                 <div>
                   <p className="text-[13px] font-medium text-fg">Dane demonstracyjne</p>
-                  <p className="mt-0.5 text-[12.5px] text-fg-muted">
-                    Przywraca stan początkowy: dokumenty, kategorie, kontrahentów i ustawienia.
+                  <p className="mt-0.5 text-[12.5px] leading-relaxed text-fg-muted">
+                    Stan początkowy przywraca komenda <code className="font-mono text-fg">npm run db:reset</code>.
+                    Świadomie nie ma tu przycisku — dane siedzą w bazie współdzielonej przez wszystkich
+                    użytkowników instalacji, a nie w tej przeglądarce.
                   </p>
                 </div>
-                <Button variant="secondary" onClick={() => setResetOpen(true)}>
-                  <RotateCcw className="size-4" aria-hidden />
-                  Przywróć dane demo
-                </Button>
               </div>
             </div>
           </Panel>
         </div>
       </div>
 
-      <Modal
-        open={resetOpen}
-        onClose={() => setResetOpen(false)}
-        size="sm"
-        title="Przywrócić dane demonstracyjne?"
-        footer={
-          <>
-            <Button variant="ghost" onClick={() => setResetOpen(false)}>
-              Anuluj
-            </Button>
-            <Button
-              variant="danger"
-              onClick={() => {
-                resetDemoData();
-                setResetOpen(false);
-                toast.success("Przywrócono dane demonstracyjne.");
-              }}
-            >
-              Przywróć
-            </Button>
-          </>
-        }
-      >
-        <p className="text-[13px] leading-relaxed text-fg-muted">
-          Wszystkie zmiany wprowadzone w tej przeglądarce — dodane dokumenty, kategorie, kontrahenci i ustawienia —
-          zostaną utracone.
-        </p>
-      </Modal>
     </>
   );
 }

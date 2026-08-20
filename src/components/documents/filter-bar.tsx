@@ -58,13 +58,13 @@ export function FilterBar({
   );
 
   const categoryOptions = useMemo<MultiSelectOption[]>(() => {
-    const tree = buildCategoryTree(state.categories, state.documents);
+    const tree = buildCategoryTree(state.categories, state.usage.byCategory);
     return flattenCategoryTree(tree).map((node) => ({
       value: node.id,
       label: `${"  ".repeat(node.depth)}${node.depth > 0 ? "└ " : ""}${node.name}`,
       hint: node.totalCount > 0 ? String(node.totalCount) : undefined,
     }));
-  }, [state.categories, state.documents]);
+  }, [state.categories, state.usage.byCategory]);
 
   return (
     <div className="flex flex-wrap items-center gap-2 border-b border-border bg-surface px-6 py-2.5">

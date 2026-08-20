@@ -16,8 +16,8 @@ import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/misc";
 import { useToast } from "@/components/ui/toast";
-import { useAppData } from "@/lib/data/store";
-import { buildLookups, emptyFilters, filterDocuments, sortDocuments } from "@/lib/data/queries";
+import { useAppData, useDocumentQuery } from "@/lib/data/store";
+import { buildLookups, countActiveFilters, emptyFilters } from "@/lib/data/queries";
 import { BUFFER_COLUMNS } from "@/lib/data/columns";
 import type { Attachment, DocumentFilters, InvoiceDocument, SortState } from "@/lib/domain/types";
 import { formatDate, formatDateTime } from "@/lib/format";
@@ -51,25 +51,21 @@ export default function BufferPage() {
     [state.counterparties, state.categories, state.documentTypes],
   );
 
-  const buffered = useMemo(
-    () => state.documents.filter((document) => document.stage === "buffer"),
-    [state.documents],
-  );
-
-  const filtered = useMemo(
-    () => filterDocuments(buffered, filters, lookups, state.categories),
-    [buffered, filters, lookups, state.categories],
-  );
-  const sorted = useMemo(() => sortDocuments(filtered, sort, lookups), [filtered, sort, lookups]);
-  const paged = useMemo(() => sorted.slice(page * pageSize, (page + 1) * pageSize), [sorted, page, pageSize]);
+  const { documents: paged, total, loading } = useDocumentQuery({
+    filters,
+    sort,
+    page: page + 1,
+    pageSize,
+    stage: "buffer",
+  });
 
   const nextRun = useMemo(() => nextScheduledRun(state.schedule), [state.schedule]);
   const currentPreview = previewDocument
-    ? (state.documents.find((document) => document.id === previewDocument.id) ?? null)
+    ? (paged.find((document) => document.id === previewDocument.id) ?? previewDocument)
     : null;
 
-  const accept = (ids: string[]) => {
-    const result = acceptFromBuffer(ids);
+  const accept = async (ids: string[]) => {
+    const result = await acceptFromBuffer(ids);
     if (!result.ok) {
       toast.error(result.message);
       return;
@@ -79,8 +75,8 @@ export default function BufferPage() {
     toast.success(result.message, "Znajdziesz je w rejestrze dokumentów.");
   };
 
-  const reject = (ids: string[]) => {
-    const result = rejectFromBuffer(ids);
+  const reject = async (ids: string[]) => {
+    const result = await rejectFromBuffer(ids);
     if (!result.ok) {
       toast.error(result.message);
       return;
@@ -115,8 +111,8 @@ export default function BufferPage() {
 
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-surface px-6 py-2.5 text-[12.5px]">
         <p className="text-fg-muted">
-          <span className="font-medium text-fg">{buffered.length}</span>{" "}
-          {buffered.length === 1 ? "dokument oczekuje" : "dokumentów oczekuje"} na decyzję. Akceptacja przenosi je do
+          <span className="font-medium text-fg">{state.usage.bufferCount}</span>{" "}
+          {state.usage.bufferCount === 1 ? "dokument oczekuje" : "dokumentów oczekuje"} na decyzję. Akceptacja przenosi je do
           rejestru; odrzucenie usuwa z bufora.
         </p>
         <p className="flex items-center gap-1.5 text-fg-subtle">
@@ -150,6 +146,9 @@ export default function BufferPage() {
 
       <FilterBar filters={filters} onChange={(next) => { setFilters(next); setPage(0); }} showStatusFilter={false} />
 
+      {/* Wynik przychodzi z serwera, wiec przy zmianie filtrow tabela
+          na moment przygasa zamiast migac pusta lista. */}
+      <div aria-busy={loading} className={loading ? "opacity-60 transition-opacity" : "transition-opacity"}>
       <DocumentsTable
         documents={paged}
         columnKeys={BUFFER_COLUMNS}
@@ -177,7 +176,7 @@ export default function BufferPage() {
           },
         ]}
         emptyState={
-          buffered.length === 0 ? (
+          countActiveFilters(filters) === 0 ? (
             <EmptyState
               icon={Inbox}
               title="Bufor jest pusty"
@@ -211,7 +210,7 @@ export default function BufferPage() {
       />
 
       <TableFooter
-        total={sorted.length}
+        total={total}
         page={page}
         pageSize={pageSize}
         onPageChange={setPage}
@@ -221,6 +220,7 @@ export default function BufferPage() {
         }}
         selectedCount={selectedIds.size}
       />
+      </div>
 
       <Drawer
         open={Boolean(currentPreview)}

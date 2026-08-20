@@ -242,18 +242,28 @@ export interface CategoryNode extends Category {
   totalAmount: number;
 }
 
-export function buildCategoryTree(
-  categories: Category[],
-  documents: InvoiceDocument[],
-): CategoryNode[] {
-  const countByCategory = new Map<string, { count: number; amount: number }>();
+/** Ile dokumentow i na jaka kwote wisi bezposrednio pod danym identyfikatorem. */
+export type UsageMap = Map<string, { count: number; amount: number }>;
+
+/**
+ * Zliczenie uzycia z listy dokumentow. Zostaje jako czysta funkcja, bo na niej
+ * opieraja sie testy drzewa kategorii — na produkcji te same liczby przychodzą
+ * gotowe z agregatu bazy, zeby nie sciagac calego rejestru do przegladarki.
+ */
+export function categoryUsageFromDocuments(documents: InvoiceDocument[]): UsageMap {
+  const usage: UsageMap = new Map();
   for (const document of documents) {
     if (!document.categoryId) continue;
-    const entry = countByCategory.get(document.categoryId) ?? { count: 0, amount: 0 };
+    const entry = usage.get(document.categoryId) ?? { count: 0, amount: 0 };
     entry.count += 1;
     entry.amount += document.currency === "PLN" ? document.grossAmount : 0;
-    countByCategory.set(document.categoryId, entry);
+    usage.set(document.categoryId, entry);
   }
+  return usage;
+}
+
+export function buildCategoryTree(categories: Category[], usage: UsageMap): CategoryNode[] {
+  const countByCategory = usage;
 
   const nodesById = new Map<string, CategoryNode>(
     categories.map((category) => {

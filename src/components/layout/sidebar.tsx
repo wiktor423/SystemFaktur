@@ -24,7 +24,7 @@ const navigation = [
 export function Sidebar() {
   const pathname = usePathname();
   const { state } = useAppData();
-  const bufferCount = state.documents.filter((document) => document.stage === "buffer").length;
+  const bufferCount = state.usage.bufferCount;
 
   return (
     <nav className="flex h-full w-60 shrink-0 flex-col border-r border-border bg-surface">

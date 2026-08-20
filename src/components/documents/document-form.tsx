@@ -128,6 +128,9 @@ export function DocumentFormModal({
 
   const [form, setForm] = useState<FormState>(() => toFormState(document, state.documentTypes[0]?.id ?? ""));
   const [errors, setErrors] = useState<Record<string, string>>({});
+  /** Blokuje przycisk na czas zapisu — bez tego podwójne kliknięcie wysyła
+   *  dwa żądania, z których drugie odbije się o unikalny indeks numeru. */
+  const [saving, setSaving] = useState(false);
   const [creatingCounterparty, setCreatingCounterparty] = useState(false);
   const [newCounterparty, setNewCounterparty] = useState<NewCounterpartyState>(emptyCounterparty);
 
@@ -140,8 +143,8 @@ export function DocumentFormModal({
   }, [open, document, state.documentTypes]);
 
   const categoryOptions = useMemo(
-    () => flattenCategoryTree(buildCategoryTree(state.categories, state.documents)),
-    [state.categories, state.documents],
+    () => flattenCategoryTree(buildCategoryTree(state.categories, state.usage.byCategory)),
+    [state.categories, state.usage.byCategory],
   );
 
   const sortedCounterparties = useMemo(
@@ -172,7 +175,7 @@ export function DocumentFormModal({
     setForm(next);
   };
 
-  const validate = (): { valid: boolean; counterpartyId: string } => {
+  const validate = async (): Promise<{ valid: boolean; counterpartyId: string }> => {
     const nextErrors: Record<string, string> = {};
 
     const numberCheck = validateDocumentNumber(form.number);
@@ -223,8 +226,10 @@ export function DocumentFormModal({
     if (Object.keys(nextErrors).length > 0) return { valid: false, counterpartyId };
 
     if (creatingCounterparty) {
-      const created: Counterparty = {
-        id: `cp-new-${Date.now().toString(36)}`,
+      // Identyfikator nadaje baza, wiec kartoteke trzeba zalozyc przed
+      // zapisem dokumentu i doczekac sie odpowiedzi.
+      const draft: Counterparty = {
+        id: "",
         name: newCounterparty.name.trim(),
         nip: newCounterparty.nip.replace(/[\s-]/g, ""),
         address: {
@@ -236,15 +241,22 @@ export function DocumentFormModal({
         bankAccount: newCounterparty.bankAccount.replace(/\s/g, "") || null,
         defaultCategoryId: null,
       };
-      upsertCounterparty(created);
-      counterpartyId = created.id;
+      const result = await upsertCounterparty(draft);
+      if (!result.ok || !result.data) {
+        setErrors({ ...nextErrors, newNip: result.fields?.nip ?? result.message });
+        return { valid: false, counterpartyId };
+      }
+      counterpartyId = result.data.id;
     }
 
     return { valid: true, counterpartyId };
   };
 
-  const submit = () => {
-    const { valid, counterpartyId } = validate();
+  const submit = async () => {
+    if (saving) return;
+    setSaving(true);
+    try {
+    const { valid, counterpartyId } = await validate();
     if (!valid) return;
 
     const payload = {
@@ -265,9 +277,9 @@ export function DocumentFormModal({
     };
 
     if (document) {
-      const result = updateDocument(document.id, payload);
+      const result = await updateDocument(document.id, payload as DocumentDraft);
       if (!result.ok) {
-        setErrors({ number: result.message });
+        setErrors(result.fields ?? { number: result.message });
         toast.error("Nie zapisano zmian", result.message);
         return;
       }
@@ -286,14 +298,17 @@ export function DocumentFormModal({
       categoryAutoAssigned: false,
     } as DocumentDraft;
 
-    const result = addDocument(draft);
+    const result = await addDocument(draft, defaultStage);
     if (!result.ok) {
-      setErrors({ number: result.message });
+      setErrors(result.fields ?? { number: result.message });
       toast.error("Nie dodano dokumentu", result.message);
       return;
     }
     toast.success(result.message);
     onClose();
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -314,7 +329,7 @@ export function DocumentFormModal({
           <Button variant="ghost" onClick={onClose}>
             Anuluj
           </Button>
-          <Button variant="primary" onClick={submit}>
+          <Button variant="primary" onClick={submit} disabled={saving}>
             {document ? "Zapisz zmiany" : "Dodaj dokument"}
           </Button>
         </>

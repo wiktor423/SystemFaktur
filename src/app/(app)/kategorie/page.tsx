@@ -40,13 +40,13 @@ export default function CategoriesPage() {
   const [ruleQuery, setRuleQuery] = useState("");
 
   const tree = useMemo(
-    () => buildCategoryTree(state.categories, state.documents),
-    [state.categories, state.documents],
+    () => buildCategoryTree(state.categories, state.usage.byCategory),
+    [state.categories, state.usage.byCategory],
   );
 
   const flat = useMemo(() => flattenCategoryTree(tree), [tree]);
   const maxAmount = useMemo(() => Math.max(1, ...tree.map((node) => node.totalAmount)), [tree]);
-  const uncategorized = state.documents.filter((document) => !document.categoryId).length;
+  const uncategorized = state.usage.uncategorized;
 
   const toggleCollapse = (id: string) => {
     setCollapsed((current) => {
@@ -57,8 +57,8 @@ export default function CategoriesPage() {
     });
   };
 
-  const submitRoot = () => {
-    const result = addCategory(newRootName, null);
+  const submitRoot = async () => {
+    const result = await addCategory(newRootName, null);
     if (!result.ok) {
       toast.error(result.message);
       return;
@@ -67,9 +67,9 @@ export default function CategoriesPage() {
     toast.success(result.message);
   };
 
-  const submitChild = () => {
+  const submitChild = async () => {
     if (!childParentId) return;
-    const result = addCategory(childName, childParentId);
+    const result = await addCategory(childName, childParentId);
     if (!result.ok) {
       toast.error(result.message);
       return;
