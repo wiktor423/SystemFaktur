@@ -93,7 +93,7 @@ export async function importFromKsef(params: ImportParams): Promise<ImportSummar
   const summary: ImportSummary = { fetched: 0, imported: 0, duplicates: 0, createdCounterparties: 0 };
 
   try {
-    const settings = await prisma.ksefSchedule.findUnique({ where: { singleton: true } });
+    const settings = await prisma.ksefSchedule.findUnique({ where: { id: 1 } });
     const client = getKsefClient({ simulateFailure: settings?.simulateFailure ?? false });
     const invoices = await client.fetchInvoices({
       dateFrom: params.dateFrom,

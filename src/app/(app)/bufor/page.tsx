@@ -146,9 +146,15 @@ export default function BufferPage() {
 
       <FilterBar filters={filters} onChange={(next) => { setFilters(next); setPage(0); }} showStatusFilter={false} />
 
-      {/* Wynik przychodzi z serwera, wiec przy zmianie filtrow tabela
-          na moment przygasa zamiast migac pusta lista. */}
-      <div aria-busy={loading} className={loading ? "opacity-60 transition-opacity" : "transition-opacity"}>
+      {/* Wynik przychodzi z serwera, więc przy zmianie filtrów tabela na moment
+          przygasa zamiast migać pustą listą. Opakowanie musi być pełnoprawną
+          kolumną flex (`min-h-0 flex-1 flex-col`) — tabela w środku ma
+          `flex-1 overflow-auto` i bez tego nie przejmie wysokości ani nie
+          dostanie paska przewijania. */}
+      <div
+        aria-busy={loading}
+        className={`flex min-h-0 flex-1 flex-col transition-opacity ${loading ? "opacity-60" : ""}`}
+      >
       <DocumentsTable
         documents={paged}
         columnKeys={BUFFER_COLUMNS}

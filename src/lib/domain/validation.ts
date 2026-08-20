@@ -17,7 +17,11 @@ function fail(message: string): ValidationResult {
   return { valid: false, message };
 }
 
-/** Usuwa spacje, myślniki i inne separatory. */
+/**
+ * Usuwa spacje i myślniki — separatory używane w zapisie NIP i numerów kont.
+ * Litery zostają celowo: ta sama funkcja normalizuje IBAN, którego prefiks
+ * kraju („PL") jest częścią numeru, a nie ozdobnikiem.
+ */
 export function stripSeparators(value: string): string {
   return value.replace(/[\s-]/g, "");
 }

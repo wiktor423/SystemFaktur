@@ -42,7 +42,7 @@ function slotFor(now: Date): Date {
 }
 
 export async function runScheduledFetch(now = new Date()): Promise<"skipped" | "done" | "taken"> {
-  const schedule = await prisma.ksefSchedule.findUnique({ where: { singleton: true } });
+  const schedule = await prisma.ksefSchedule.findUnique({ where: { id: 1 } });
   if (!schedule?.enabled || schedule.times.length === 0) return "skipped";
   if (!schedule.times.includes(currentTime(now))) return "skipped";
 

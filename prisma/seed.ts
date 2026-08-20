@@ -163,9 +163,9 @@ async function main() {
   console.log(`Dokumenty: ${created}${skipped ? ` (pominięto ${skipped} kolidujących z piaskownicą KSeF)` : ""}`);
 
   await prisma.ksefSchedule.upsert({
-    where: { singleton: true },
+    where: { id: 1 },
     create: {
-      singleton: true,
+      id: 1,
       enabled: seedSchedule.enabled,
       times: seedSchedule.times,
       scope: toDb(seedSchedule.scope),

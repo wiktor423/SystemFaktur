@@ -21,7 +21,7 @@ export async function GET() {
         prisma.category.findMany({ orderBy: { name: "asc" } }),
         prisma.documentType.findMany({ orderBy: [{ isSystem: "desc" }, { name: "asc" }] }),
         prisma.counterparty.findMany({ orderBy: { name: "asc" } }),
-        prisma.ksefSchedule.findUnique({ where: { singleton: true } }),
+        prisma.ksefSchedule.findUnique({ where: { id: 1 } }),
         prisma.ksefRun.findMany({ orderBy: { startedAt: "desc" }, take: 20 }),
         prisma.columnPreference.findMany({ orderBy: { position: "asc" } }),
         prisma.document.count({ where: { stage: "BUFFER", bufferDecision: "PENDING" } }),

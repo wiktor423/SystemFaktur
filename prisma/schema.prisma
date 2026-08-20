@@ -240,10 +240,15 @@ model Attachment {
 
 // --- Integracja z KSeF ------------------------------------------------------
 
-/// Harmonogram automatycznego pobierania. Jeden wiersz na instalację —
-/// wymuszony przez `singleton`, żeby nie dało się utworzyć drugiego.
+/// Harmonogram automatycznego pobierania. Jeden wiersz na instalację,
+/// wymuszony ograniczeniem CHECK (id = 1) dodanym w migracji.
+///
+/// Klucz jest liczbą, a nie wartością logiczną, celowo. Prisma scala
+/// równoległe wywołania `findUnique` w jedno zapytanie z `IN (...)`, a dla
+/// klucza typu Boolean taki warunek nie istnieje — dwa jednoczesne odczyty
+/// harmonogramu kończyły się błędem walidacji zapytania.
 model KsefSchedule {
-  singleton    Boolean        @id @default(true)
+  id           Int            @id @default(1)
   enabled      Boolean        @default(false)
   /// Godziny uruchomień „HH:mm”, dowolna liczba w ciągu doby.
   times        String[]
