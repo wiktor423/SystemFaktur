@@ -1,0 +1,62 @@
+{
+  "suppliers": [
+    {
+      "name": "PakPol Opakowania sp. z o.o.",
+      "city": "Pruszków",
+      "street": "ul. Przemysłowa 22",
+      "post": "05-800",
+      "nip": "2650866478",
+      "bankAccount": "41318261885181478554557832"
+    },
+    {
+      "name": "Cukrownia Nadwiślańska S.A.",
+      "city": "Toruń",
+      "street": "ul. Fabryczna 3",
+      "post": "87-100",
+      "nip": "9430928608",
+      "bankAccount": "59890435956424360128023751"
+    },
+    {
+      "name": "ChłodTrans Logistyka sp.j.",
+      "city": "Bielsko-Biała",
+      "street": "ul. Spedycyjna 8",
+      "post": "43-300",
+      "nip": "4291146318",
+      "bankAccount": "64762909642043618810912199"
+    }
+  ],
+  "customers": [
+    {
+      "name": "Delikatesy Południe S.A.",
+      "city": "Katowice",
+      "street": "ul. Handlowa 100",
+      "post": "40-100",
+      "nip": "5455943157",
+      "bankAccount": "63175078467239212370043294"
+    },
+    {
+      "name": "MarketWit Sieci Handlowe sp. z o.o.",
+      "city": "Gdynia",
+      "street": "Aleja Zwycięstwa 210",
+      "post": "81-521",
+      "nip": "7850931102",
+      "bankAccount": "47157933413068989171870625"
+    },
+    {
+      "name": "Cukiernia Pod Jagodą Anna Malinowska",
+      "city": "Kraków",
+      "street": "ul. Floriańska 18",
+      "post": "31-019",
+      "nip": "3232624106",
+      "bankAccount": "25606431364141607590878868"
+    }
+  ],
+  "self": {
+    "nip": "6919478855",
+    "name": "Gumijagoda sp. z o.o.",
+    "street": "ul. Jagodowa 7",
+    "post": "34-500",
+    "city": "Zakopane",
+    "bankAccount": "97987544048395847304920849"
+  }
+}

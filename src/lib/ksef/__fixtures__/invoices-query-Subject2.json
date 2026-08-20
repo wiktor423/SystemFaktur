@@ -1,0 +1,171 @@
+{
+  "hasMore": false,
+  "isTruncated": false,
+  "invoices": [
+    {
+      "ksefNumber": "9430928608-20260820-67257C800000-DC",
+      "invoiceNumber": "CN/2026/07/318",
+      "issueDate": "2026-07-24",
+      "invoicingDate": "2026-08-20T12:40:10.791046+00:00",
+      "acquisitionDate": "2026-08-20T12:40:10.912713+00:00",
+      "permanentStorageDate": "2026-08-20T12:40:11.165011+00:00",
+      "seller": {
+        "nip": "9430928608",
+        "name": "Cukrownia Nadwiślańska S.A."
+      },
+      "buyer": {
+        "identifier": {
+          "type": "Nip",
+          "value": "6919478855"
+        },
+        "name": "Gumijagoda sp. z o.o."
+      },
+      "netAmount": 37800,
+      "grossAmount": 40824,
+      "vatAmount": 3024,
+      "currency": "PLN",
+      "invoicingMode": "Offline",
+      "invoiceType": "Vat",
+      "formCode": {
+        "systemCode": "FA (3)",
+        "schemaVersion": "1-0E",
+        "value": "FA"
+      },
+      "isSelfInvoicing": false,
+      "hasAttachment": false,
+      "invoiceHash": "MUzqiO4P+Z8iUrMtb9Ql7bif4i8v0fNj1E0N926jLAE="
+    },
+    {
+      "ksefNumber": "2650866478-20260820-6721D7C00000-53",
+      "invoiceNumber": "PAK/0181/2026",
+      "issueDate": "2026-07-31",
+      "invoicingDate": "2026-08-20T12:40:03.132678+00:00",
+      "acquisitionDate": "2026-08-20T12:40:03.224727+00:00",
+      "permanentStorageDate": "2026-08-20T12:40:05.188593+00:00",
+      "seller": {
+        "nip": "2650866478",
+        "name": "PakPol Opakowania sp. z o.o."
+      },
+      "buyer": {
+        "identifier": {
+          "type": "Nip",
+          "value": "6919478855"
+        },
+        "name": "Gumijagoda sp. z o.o."
+      },
+      "netAmount": 14280,
+      "grossAmount": 17564.4,
+      "vatAmount": 3284.4,
+      "currency": "PLN",
+      "invoicingMode": "Offline",
+      "invoiceType": "Vat",
+      "formCode": {
+        "systemCode": "FA (3)",
+        "schemaVersion": "1-0E",
+        "value": "FA"
+      },
+      "isSelfInvoicing": false,
+      "hasAttachment": false,
+      "invoiceHash": "sedlz7UjW78OQHGlCX0ZCuYRPC1IZ+uokS1wnl6v4uk="
+    },
+    {
+      "ksefNumber": "4291146318-20260820-6728FC800000-A2",
+      "invoiceNumber": "CHT/1142/08/2026",
+      "issueDate": "2026-08-05",
+      "invoicingDate": "2026-08-20T12:40:17.57258+00:00",
+      "acquisitionDate": "2026-08-20T12:40:17.650866+00:00",
+      "permanentStorageDate": "2026-08-20T12:40:19.049369+00:00",
+      "seller": {
+        "nip": "4291146318",
+        "name": "ChłodTrans Logistyka sp.j."
+      },
+      "buyer": {
+        "identifier": {
+          "type": "Nip",
+          "value": "6919478855"
+        },
+        "name": "Gumijagoda sp. z o.o."
+      },
+      "netAmount": 17040,
+      "grossAmount": 20959.2,
+      "vatAmount": 3919.2,
+      "currency": "PLN",
+      "invoicingMode": "Offline",
+      "invoiceType": "Vat",
+      "formCode": {
+        "systemCode": "FA (3)",
+        "schemaVersion": "1-0E",
+        "value": "FA"
+      },
+      "isSelfInvoicing": false,
+      "hasAttachment": false,
+      "invoiceHash": "ChMlfpJvidH5X/DNhbzmmIF4IE5tPOKx6Gsu9T+3ZoE="
+    },
+    {
+      "ksefNumber": "2650866478-20260820-6721FC800000-D0",
+      "invoiceNumber": "PAK/0207/2026",
+      "issueDate": "2026-08-11",
+      "invoicingDate": "2026-08-20T12:40:03.811431+00:00",
+      "acquisitionDate": "2026-08-20T12:40:03.985356+00:00",
+      "permanentStorageDate": "2026-08-20T12:40:05.759663+00:00",
+      "seller": {
+        "nip": "2650866478",
+        "name": "PakPol Opakowania sp. z o.o."
+      },
+      "buyer": {
+        "identifier": {
+          "type": "Nip",
+          "value": "6919478855"
+        },
+        "name": "Gumijagoda sp. z o.o."
+      },
+      "netAmount": 5312.5,
+      "grossAmount": 6534.38,
+      "vatAmount": 1221.88,
+      "currency": "PLN",
+      "invoicingMode": "Offline",
+      "invoiceType": "Vat",
+      "formCode": {
+        "systemCode": "FA (3)",
+        "schemaVersion": "1-0E",
+        "value": "FA"
+      },
+      "isSelfInvoicing": false,
+      "hasAttachment": false,
+      "invoiceHash": "03J6gTFO8Nkk+iZ3xoybyatib+dhqz3VKMosbK+N8wU="
+    },
+    {
+      "ksefNumber": "9430928608-20260820-672557000000-F7",
+      "invoiceNumber": "CN/2026/08/402",
+      "issueDate": "2026-08-14",
+      "invoicingDate": "2026-08-20T12:40:10.861315+00:00",
+      "acquisitionDate": "2026-08-20T12:40:10.984328+00:00",
+      "permanentStorageDate": "2026-08-20T12:40:11.287062+00:00",
+      "seller": {
+        "nip": "9430928608",
+        "name": "Cukrownia Nadwiślańska S.A."
+      },
+      "buyer": {
+        "identifier": {
+          "type": "Nip",
+          "value": "6919478855"
+        },
+        "name": "Gumijagoda sp. z o.o."
+      },
+      "netAmount": 38040,
+      "grossAmount": 42973.2,
+      "vatAmount": 4933.2,
+      "currency": "PLN",
+      "invoicingMode": "Offline",
+      "invoiceType": "Vat",
+      "formCode": {
+        "systemCode": "FA (3)",
+        "schemaVersion": "1-0E",
+        "value": "FA"
+      },
+      "isSelfInvoicing": false,
+      "hasAttachment": false,
+      "invoiceHash": "7xBq6muv5E/OqU8KUTIpDuXWYsenP3IvYdJg7Hb9Mg4="
+    }
+  ]
+}

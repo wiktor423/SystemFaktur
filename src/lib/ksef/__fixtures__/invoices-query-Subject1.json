@@ -1,0 +1,138 @@
+{
+  "hasMore": false,
+  "isTruncated": false,
+  "invoices": [
+    {
+      "ksefNumber": "6919478855-20260820-672BD7C00000-B5",
+      "invoiceNumber": "GJ/2026/07/118",
+      "issueDate": "2026-07-28",
+      "invoicingDate": "2026-08-20T12:40:23.325553+00:00",
+      "acquisitionDate": "2026-08-20T12:40:23.463952+00:00",
+      "permanentStorageDate": "2026-08-20T12:40:24.917917+00:00",
+      "seller": {
+        "nip": "6919478855",
+        "name": "Gumijagoda sp. z o.o."
+      },
+      "buyer": {
+        "identifier": {
+          "type": "Nip",
+          "value": "7850931102"
+        },
+        "name": "MarketWit Sieci Handlowe sp. z o.o."
+      },
+      "netAmount": 29410,
+      "grossAmount": 36174.3,
+      "vatAmount": 6764.3,
+      "currency": "PLN",
+      "invoicingMode": "Offline",
+      "invoiceType": "Vat",
+      "formCode": {
+        "systemCode": "FA (3)",
+        "schemaVersion": "1-0E",
+        "value": "FA"
+      },
+      "isSelfInvoicing": false,
+      "hasAttachment": false,
+      "invoiceHash": "Bd+iwjNhGndEweTUq0eDpijDzmcUIrtmTA00mVJPFA8="
+    },
+    {
+      "ksefNumber": "6919478855-20260820-66EAFC800000-4A",
+      "invoiceNumber": "GJ/2026/08/001",
+      "issueDate": "2026-08-03",
+      "invoicingDate": "2026-08-20T12:38:13.470191+00:00",
+      "acquisitionDate": "2026-08-20T12:38:13.646614+00:00",
+      "permanentStorageDate": "2026-08-20T12:38:15.296068+00:00",
+      "seller": {
+        "nip": "6919478855",
+        "name": "Gumijagoda sp. z o.o."
+      },
+      "buyer": {
+        "identifier": {
+          "type": "Nip",
+          "value": "5455943157"
+        },
+        "name": "Delikatesy Południe S.A."
+      },
+      "netAmount": 15156,
+      "grossAmount": 18641.88,
+      "vatAmount": 3485.88,
+      "currency": "PLN",
+      "invoicingMode": "Offline",
+      "invoiceType": "Vat",
+      "formCode": {
+        "systemCode": "FA (3)",
+        "schemaVersion": "1-0E",
+        "value": "FA"
+      },
+      "isSelfInvoicing": false,
+      "hasAttachment": false,
+      "invoiceHash": "Lt32KinTTeUElWTdWf+k3p2oOzFgOeoT1BEW+tVx6Uo="
+    },
+    {
+      "ksefNumber": "6919478855-20260820-672BFC800000-36",
+      "invoiceNumber": "GJ/2026/08/014",
+      "issueDate": "2026-08-03",
+      "invoicingDate": "2026-08-20T12:40:23.425197+00:00",
+      "acquisitionDate": "2026-08-20T12:40:23.561533+00:00",
+      "permanentStorageDate": "2026-08-20T12:40:25.215656+00:00",
+      "seller": {
+        "nip": "6919478855",
+        "name": "Gumijagoda sp. z o.o."
+      },
+      "buyer": {
+        "identifier": {
+          "type": "Nip",
+          "value": "5455943157"
+        },
+        "name": "Delikatesy Południe S.A."
+      },
+      "netAmount": 17556,
+      "grossAmount": 19676.88,
+      "vatAmount": 2120.88,
+      "currency": "PLN",
+      "invoicingMode": "Offline",
+      "invoiceType": "Vat",
+      "formCode": {
+        "systemCode": "FA (3)",
+        "schemaVersion": "1-0E",
+        "value": "FA"
+      },
+      "isSelfInvoicing": false,
+      "hasAttachment": false,
+      "invoiceHash": "eeuGCPyVAgWr1PEQf6HMEu6Gf7xTdiKDr7BuMtDodJs="
+    },
+    {
+      "ksefNumber": "6919478855-20260820-672BD7C00001-B2",
+      "invoiceNumber": "GJ/2026/08/026",
+      "issueDate": "2026-08-12",
+      "invoicingDate": "2026-08-20T12:40:23.494023+00:00",
+      "acquisitionDate": "2026-08-20T12:40:23.570932+00:00",
+      "permanentStorageDate": "2026-08-20T12:40:25.076267+00:00",
+      "seller": {
+        "nip": "6919478855",
+        "name": "Gumijagoda sp. z o.o."
+      },
+      "buyer": {
+        "identifier": {
+          "type": "Nip",
+          "value": "3232624106"
+        },
+        "name": "Cukiernia Pod Jagodą Anna Malinowska"
+      },
+      "netAmount": 8360,
+      "grossAmount": 9028.8,
+      "vatAmount": 668.8,
+      "currency": "PLN",
+      "invoicingMode": "Offline",
+      "invoiceType": "Vat",
+      "formCode": {
+        "systemCode": "FA (3)",
+        "schemaVersion": "1-0E",
+        "value": "FA"
+      },
+      "isSelfInvoicing": false,
+      "hasAttachment": false,
+      "invoiceHash": "m0EWJwSdPepCoMYWk9UhW5vOqtUwsdf4bk72ryF+TQE="
+    }
+  ]
+}

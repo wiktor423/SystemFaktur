@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Faktura xmlns="http://crd.gov.pl/wzor/2023/06/29/12648/">
+  <Naglowek>
+    <KodFormularza kodSystemowy="FA (2)" wersjaSchemy="1-0E">FA</KodFormularza>
+    <WariantFormularza>2</WariantFormularza>
+    <DataWytworzeniaFa>2026-08-14T09:12:41Z</DataWytworzeniaFa>
+    <SystemInfo>Gumijagoda — moduł faktur</SystemInfo>
+  </Naglowek>
+  <Podmiot1>
+    <DaneIdentyfikacyjne>
+      <NIP>8740204235</NIP>
+      <Nazwa>Skup Runa Leśnego „Beskid Gumijski” sp. z o.o.</Nazwa>
+    </DaneIdentyfikacyjne>
+    <Adres>
+      <KodKraju>PL</KodKraju>
+      <AdresL1>Zbójnicka 14</AdresL1>
+      <AdresL2>34-500 Zakopane</AdresL2>
+    </Adres>
+  </Podmiot1>
+  <Podmiot2>
+    <DaneIdentyfikacyjne>
+      <NIP>6751234560</NIP>
+      <Nazwa>Gumijagoda sp. z o.o.</Nazwa>
+    </DaneIdentyfikacyjne>
+    <Adres>
+      <KodKraju>PL</KodKraju>
+      <AdresL1>Jagodowa 7</AdresL1>
+      <AdresL2>34-300 Żywiec</AdresL2>
+    </Adres>
+  </Podmiot2>
+  <Fa>
+    <KodWaluty>PLN</KodWaluty>
+    <P_1>2026-08-14</P_1>
+    <P_2>BES/0913/2026</P_2>
+    <P_6>2026-08-13</P_6>
+    <P_13_1>7360.00</P_13_1>
+    <P_14_1>368.00</P_14_1>
+    <P_15>7728.00</P_15>
+    <Platnosc>
+      <TerminPlatnosci>
+        <Termin>2026-09-13</Termin>
+      </TerminPlatnosci>
+      <RachunekBankowy>
+        <NrRB>PL79995938448459912309418476</NrRB>
+      </RachunekBankowy>
+    </Platnosc>
+    <FaWiersz>
+      <NrWierszaFa>1</NrWierszaFa>
+      <P_7>Gumijagody klasa I — zbiór ręczny</P_7>
+      <P_8A>kg</P_8A>
+      <P_8B>250</P_8B>
+      <P_9A>18.40</P_9A>
+      <P_11>4600.00</P_11>
+      <P_12>5</P_12>
+    </FaWiersz>
+    <FaWiersz>
+      <NrWierszaFa>2</NrWierszaFa>
+      <P_7>Gumijagody klasa II — na syrop</P_7>
+      <P_8A>kg</P_8A>
+      <P_8B>232</P_8B>
+      <P_9A>11.90</P_9A>
+      <P_11>2760.80</P_11>
+      <P_12>5</P_12>
+    </FaWiersz>
+  </Fa>
+</Faktura>

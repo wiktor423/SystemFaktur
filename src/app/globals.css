@@ -1,0 +1,178 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ---------------------------------------------------------------------------
+   Tokeny motywu (jasny). Wszystkie kolory UI pochodzą stąd – komponenty nigdy
+   nie odwołują się do palety Tailwinda bezpośrednio, dzięki czemu zmiana
+   motywu jest zmianą w jednym miejscu.
+--------------------------------------------------------------------------- */
+@theme {
+  --color-bg: #f6f6f9;
+  --color-surface: #ffffff;
+  --color-surface-2: #f4f4f7;
+  --color-surface-3: #ebebf0;
+
+  --color-border: #e3e3ea;
+  --color-border-strong: #cfcfda;
+
+  --color-fg: #17171f;
+  --color-fg-muted: #61616e;
+  --color-fg-subtle: #8b8b99;
+
+  --color-accent: #6d3ee0;
+  --color-accent-hover: #5c31c7;
+  --color-accent-fg: #ffffff;
+  --color-accent-soft: #f0eaff;
+  --color-accent-border: #d8c9ff;
+
+  --color-success: #0f7a4d;
+  --color-success-soft: #e4f6ec;
+  --color-success-border: #b7e3ca;
+
+  --color-warning: #9a5b00;
+  --color-warning-soft: #fdf1dd;
+  --color-warning-border: #f2d3a0;
+
+  --color-danger: #b3261e;
+  --color-danger-soft: #fdeceb;
+  --color-danger-border: #f4c4c1;
+  --color-danger-solid: #c2352b;
+  --color-danger-solid-fg: #ffffff;
+
+  --color-info: #1f5fa8;
+  --color-info-soft: #e8f1fc;
+  --color-info-border: #bcd6f2;
+
+  --radius-card: 0.75rem;
+
+  --shadow-panel: 0 1px 2px rgb(23 23 31 / 0.05), 0 1px 3px rgb(23 23 31 / 0.04);
+  --shadow-pop: 0 8px 28px -6px rgb(23 23 31 / 0.18), 0 2px 8px -2px rgb(23 23 31 / 0.08);
+  --shadow-drawer: -16px 0 48px -12px rgb(23 23 31 / 0.22);
+}
+
+/* Motyw ciemny – nadpisuje wyłącznie wartości tokenów. */
+.dark {
+  --color-bg: #0d0d12;
+  --color-surface: #16161d;
+  --color-surface-2: #1d1d26;
+  --color-surface-3: #262630;
+
+  --color-border: #2a2a35;
+  --color-border-strong: #3d3d4a;
+
+  --color-fg: #eeeef2;
+  --color-fg-muted: #a1a1b0;
+  --color-fg-subtle: #74748a;
+
+  --color-accent: #9d7bff;
+  --color-accent-hover: #b096ff;
+  --color-accent-fg: #14101f;
+  --color-accent-soft: #221a3d;
+  --color-accent-border: #3d2f6b;
+
+  --color-success: #4fc98d;
+  --color-success-soft: #10281e;
+  --color-success-border: #1e4a37;
+
+  --color-warning: #e0a458;
+  --color-warning-soft: #2a2013;
+  --color-warning-border: #4d3a1d;
+
+  --color-danger: #f2857d;
+  --color-danger-soft: #2c1717;
+  --color-danger-border: #55292a;
+  --color-danger-solid: #a8342a;
+  --color-danger-solid-fg: #ffffff;
+
+  --color-info: #6fb0f5;
+  --color-info-soft: #12202f;
+  --color-info-border: #234260;
+
+  --shadow-panel: 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow-pop: 0 12px 32px -8px rgb(0 0 0 / 0.6);
+  --shadow-drawer: -16px 0 48px -12px rgb(0 0 0 / 0.55);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  html {
+    color-scheme: light;
+  }
+
+  html.dark {
+    color-scheme: dark;
+  }
+
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-fg);
+    font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Natywna lista rozwijana `<select>` jest rysowana przez przeglądarkę i nie
+     dziedziczy tła kontrolki — bez jawnych kolorów pozycje w trybie ciemnym
+     wychodzą jasne i nieczytelne. */
+  option,
+  optgroup {
+    background-color: var(--color-surface);
+    color: var(--color-fg);
+  }
+
+  /* Liczby w tabelach i kwotach zawsze o stałej szerokości znaku. */
+  .tnum {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+  }
+
+  ::selection {
+    background-color: var(--color-accent-soft);
+    color: var(--color-fg);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+}
+
+@layer utilities {
+  /* Delikatny pasek przewijania – dużo list i tabel w tej aplikacji. */
+  .scroll-slim {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-border-strong) transparent;
+  }
+  .scroll-slim::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  .scroll-slim::-webkit-scrollbar-thumb {
+    background-color: var(--color-border-strong);
+    border: 3px solid transparent;
+    border-radius: 9999px;
+    background-clip: content-box;
+  }
+  .scroll-slim::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes slide-in-right {
+    from { transform: translateX(1.5rem); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+  @keyframes pop-in {
+    from { transform: translateY(0.5rem) scale(0.98); opacity: 0; }
+    to { transform: translateY(0) scale(1); opacity: 1; }
+  }
+  .animate-fade-in { animation: fade-in 0.15s ease-out; }
+  .animate-slide-in-right { animation: slide-in-right 0.2s cubic-bezier(0.22, 1, 0.36, 1); }
+  .animate-pop-in { animation: pop-in 0.14s cubic-bezier(0.22, 1, 0.36, 1); }
+}
