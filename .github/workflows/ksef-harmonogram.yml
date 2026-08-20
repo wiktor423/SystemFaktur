@@ -1,0 +1,56 @@
+name: Harmonogram KSeF
+
+# Zewnętrzny wyzwalacz automatycznego pobierania faktur.
+#
+# Aplikacja ma własny cron w procesie, ale darmowa instancja Render usypia po
+# okresie bezczynności — uśpiony proces nie odpali zadania. Dlatego na
+# produkcji `KSEF_SCHEDULER=off`, a przebiegi wywołuje ten przepływ,
+# uderzając w `/api/ksef/scheduled-run`.
+#
+# To jest praktyczna wypłata z decyzji projektowej podjętej wcześniej: cron
+# został oddzielony od logiki pobierania właśnie po to, żeby dało się go
+# wymienić bez ruszania aplikacji. Endpoint sam sprawdza, czy bieżąca minuta
+# mieści się w harmonogramie zapisanym w bazie, więc godziny nadal ustawia
+# użytkownik w interfejsie — ten plik tylko puka.
+
+on:
+  schedule:
+    # Co 30 minut. GitHub nie gwarantuje punktualności przy darmowym planie,
+    # a endpoint dopuszcza przebieg tylko w minutach z harmonogramu, więc
+    # pukamy częściej, niż wynosi najgęstsze realne ustawienie.
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: ksef-harmonogram
+  cancel-in-progress: false
+
+jobs:
+  pobierz:
+    name: Wywołanie przebiegu
+    runs-on: ubuntu-latest
+    steps:
+      - name: Uderzenie w endpoint harmonogramu
+        env:
+          APP_URL: ${{ vars.APP_URL }}
+          SCHEDULER_TOKEN: ${{ secrets.SCHEDULER_TOKEN }}
+        run: |
+          if [ -z "$APP_URL" ] || [ -z "$SCHEDULER_TOKEN" ]; then
+            echo "Brak APP_URL lub SCHEDULER_TOKEN — pomijam." >&2
+            exit 0
+          fi
+
+          # Instancja mogła zasnąć; pierwsze żądanie ją budzi, więc dajemy
+          # hojny limit czasu zamiast uznawać to za awarię.
+          response=$(curl --fail --silent --show-error --max-time 120 \
+            -X POST "$APP_URL/api/ksef/scheduled-run" \
+            -H "x-scheduler-token: $SCHEDULER_TOKEN")
+
+          echo "$response"
+
+          # "skipped" znaczy, że ta minuta nie jest w harmonogramie — to jest
+          # normalny, oczekiwany wynik, a nie powód do czerwonego przebiegu.
+          echo "$response" | grep -q '"outcome"' || {
+            echo "Nieoczekiwana odpowiedź endpointu." >&2
+            exit 1
+          }

@@ -28,6 +28,10 @@ services:
     build:
       context: .
       target: migrator
+    # Obraz budowany zawsze ze źródeł. Bez tego `docker compose up` używa
+    # obrazu leżącego na dysku, choćby kod zmienił się od jego zbudowania —
+    # a wtedy seed uderza w schemat, którego jeszcze nie ma.
+    pull_policy: build
     environment:
       # Wewnątrz sieci Dockera baza nazywa się `db`, nie `localhost`.
       DATABASE_URL: postgresql://lexalpha:lexalpha@db:5432/lexalpha?schema=public&connection_limit=5
@@ -43,6 +47,7 @@ services:
     build:
       context: .
       target: runner
+    pull_policy: build
     container_name: lexalpha-app
     restart: unless-stopped
     ports:

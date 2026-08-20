@@ -1,0 +1,79 @@
+name: Wdrożenie
+
+# Wdrożenie jest osobnym przebiegiem, uruchamianym dopiero po zielonym CI.
+# Kolejność kroków jest tu istotna i nieprzypadkowa:
+#
+#   1. migracje bazy
+#   2. dopiero potem nowa wersja aplikacji
+#
+# Odwrotna kolejność oznacza, że przez chwilę działa kod oczekujący kolumn,
+# których jeszcze nie ma. Dlatego migracje idą stąd, a nie ze startu kontenera —
+# obraz uruchomieniowy celowo nie zawiera Prisma CLI.
+#
+# Konsekwencja, o której trzeba wiedzieć: wdrożenie wyklikane ręcznie w panelu
+# Render pominie migracje. Schemat zmieniamy wyłącznie tą drogą.
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  # Dwa wdrożenia naraz to dwie migracje naraz — Prisma je co prawda
+  # serializuje blokadą doradczą, ale kolejność wersji przestaje być pewna.
+  group: deploy-produkcja
+  cancel-in-progress: false
+
+jobs:
+  wdroz:
+    name: Migracje i wdrożenie
+    runs-on: ubuntu-latest
+    # Ręczne uruchomienie pomija warunek; automatyczne wymaga zielonego CI.
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    environment: produkcja
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - run: npm ci
+
+      - name: Nałożenie migracji
+        env:
+          # Zewnętrzny adres bazy Render, ustawiony jako sekret repozytorium.
+          DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+        run: npx prisma migrate deploy
+
+      - name: Wywołanie wdrożenia
+        env:
+          RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$RENDER_DEPLOY_HOOK" ]; then
+            echo "Brak sekretu RENDER_DEPLOY_HOOK." >&2
+            exit 1
+          fi
+          curl --fail --silent --show-error -X POST "$RENDER_DEPLOY_HOOK" > /dev/null
+          echo "Wdrożenie zlecone."
+
+      - name: Oczekiwanie na sprawną instancję
+        env:
+          APP_URL: ${{ vars.APP_URL }}
+        run: |
+          # Render potrzebuje chwili na zbudowanie i przełączenie ruchu.
+          # Sonda `/api/health` sprawdza połączenie z bazą, więc zielona
+          # odpowiedź oznacza działającą aplikację, a nie sam żywy proces.
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent "$APP_URL/api/health" | grep -q '"status":"ok"'; then
+              echo "Aplikacja odpowiada po $((attempt * 10)) s."
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "Aplikacja nie wstała w ciągu 10 minut." >&2
+          exit 1

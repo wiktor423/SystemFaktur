@@ -1,0 +1,63 @@
+# Infrastruktura wdrożenia jako kod (Render Blueprint).
+#
+# Trzymanie tego w repozytorium, zamiast klikania w panelu, ma dwie zalety:
+# konfiguracja jest wersjonowana razem z kodem, a odtworzenie środowiska od zera
+# sprowadza się do wskazania tego pliku.
+#
+# Migracje bazy NIE są tu uruchamiane. Nakłada je proces CI, zanim wywoła
+# wdrożenie — nowa wersja aplikacji nie może wystartować na starym schemacie,
+# a obraz uruchomieniowy celowo nie zawiera Prisma CLI (oszczędza ~215 MB).
+# Szczegóły w `.github/workflows/deploy.yml` i w README.
+
+databases:
+  - name: lexalpha-db
+    databaseName: lexalpha
+    user: lexalpha
+    plan: free
+    postgresMajorVersion: "17"
+
+services:
+  - type: web
+    name: lexalpha
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    # Ostatni etap Dockerfile'a to obraz uruchomieniowy; etap `migrator`
+    # służy wyłącznie środowisku lokalnemu w docker-compose.
+    dockerContext: .
+    plan: free
+    region: frankfurt
+    healthCheckPath: /api/health
+    # Wdrożenia idą z CI po przejściu testów, a nie z każdego pusha.
+    autoDeploy: false
+
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: lexalpha-db
+          property: connectionString
+
+      # --- Integracja z KSeF -------------------------------------------------
+      # Wartości ustawiane ręcznie w panelu Render (sync: false), nigdy w repo.
+      # Zadanie wymaga wprost, żeby tokeny nie były w repozytorium ani po
+      # stronie frontendu — dotyczy to również wersji wdrożonej.
+      - key: KSEF_CLIENT
+        value: http
+      - key: KSEF_BASE_URL
+        value: https://api-test.ksef.mf.gov.pl/api/v2
+      - key: KSEF_NIP
+        sync: false
+      - key: KSEF_TOKEN
+        sync: false
+
+      # --- Harmonogram -------------------------------------------------------
+      # Wbudowany wyzwalacz jest wyłączony: darmowa instancja Render usypia po
+      # okresie bezczynności, a uśpiony proces nie odpali crona. Przebiegi
+      # wywołuje zewnętrzny harmonogram GitHub Actions, uderzając w endpoint
+      # `/api/ksef/scheduled-run`. Rozdzielenie wyzwalacza od logiki, zrobione
+      # wcześniej z powodów projektowych, okazało się tu wprost potrzebne.
+      - key: KSEF_SCHEDULER
+        value: "off"
+      - key: SCHEDULER_TOKEN
+        sync: false
+      - key: SCHEDULER_TIMEZONE
+        value: Europe/Warsaw

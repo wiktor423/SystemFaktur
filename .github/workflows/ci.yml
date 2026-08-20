@@ -1,0 +1,148 @@
+name: CI
+
+# Największa wartość tego przebiegu nie leży w automatyzacji, tylko w tym, że
+# testy chodzą na czystym środowisku. Lokalnie przechodzą przy konkretnej
+# wersji Node, konkretnej bazie i konkretnym stanie dysku — dopiero pusty klon
+# dowodzi, że przejdą też u kogoś innego. A to jest dokładnie sytuacja osoby,
+# która sklonuje repozytorium i odpali `docker compose up`.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  # Nowszy push unieważnia trwający przebieg tej samej gałęzi.
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "22"
+
+jobs:
+  jakosc:
+    name: Lint i typy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      # `npm ci` odpala `postinstall`, czyli `prisma generate` — bez tego
+      # sprawdzanie typów nie ma na czym się oprzeć, klient jest generowany.
+      - run: npm ci
+
+      - name: ESLint
+        run: npm run lint
+
+      - name: Sprawdzenie typów
+        run: npx tsc --noEmit
+
+  testy:
+    name: Testy jednostkowe i integracyjne
+    runs-on: ubuntu-latest
+
+    # Testy deduplikacji i idempotencji harmonogramu opierają się na
+    # ograniczeniach PostgreSQL-a. Na mocku bazy udowodniłyby wyłącznie to,
+    # że mock działa, więc CI musi mieć prawdziwy serwer.
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: lexalpha
+          POSTGRES_PASSWORD: lexalpha
+          POSTGRES_DB: lexalpha
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U lexalpha"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      TEST_DATABASE_URL: postgresql://lexalpha:lexalpha@localhost:5432/lexalpha_test?schema=public&connection_limit=5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - run: npm ci
+
+      - name: Vitest
+        run: npm test
+
+  e2e:
+    name: Testy e2e
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: lexalpha
+          POSTGRES_PASSWORD: lexalpha
+          POSTGRES_DB: lexalpha
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U lexalpha"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      E2E_DATABASE_URL: postgresql://lexalpha:lexalpha@localhost:5432/lexalpha_e2e?schema=public&connection_limit=5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - run: npm ci
+
+      # Sama przeglądarka, bez pozostałych silników — testy chodzą na Chromium.
+      - name: Instalacja Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Playwright
+        run: npm run test:e2e
+
+      # Ślady i zrzuty ekranu z nieudanych testów — bez nich diagnoza awarii
+      # w CI sprowadza się do zgadywania.
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-artefakty
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
+
+  obraz:
+    name: Budowanie obrazu
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Obraz budujemy przy każdej zmianie, nawet gdy nic nie wdrażamy.
+      # Błąd w Dockerfile ma wyjść tutaj, a nie przy wdrożeniu.
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: runner
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

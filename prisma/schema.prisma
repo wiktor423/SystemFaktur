@@ -13,6 +13,8 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  // Prisma 7 nie przyjmuje `url` w schemacie — adres bazy podaje
+  // `prisma.config.ts`, a klient dostaje go przez driver adapter.
 }
 
 // --- Słowniki ---------------------------------------------------------------
