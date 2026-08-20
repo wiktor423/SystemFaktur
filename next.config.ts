@@ -1,6 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Obraz produkcyjny kopiuje wyłącznie `.next/standalone` — Next dokłada tam
+  // sam serwer i te zależności z node_modules, które są faktycznie używane.
+  // Bez tego obraz ciągnąłby cały katalog node_modules razem z narzędziami
+  // deweloperskimi.
+  output: "standalone",
+
   // Pływająca plakietka „N” w rogu ekranu to wskaźnik Next.js Dev Tools —
   // element narzędzi deweloperskich, nie interfejsu aplikacji.
   devIndicators: false,

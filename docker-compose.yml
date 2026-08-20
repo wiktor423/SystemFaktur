@@ -1,5 +1,10 @@
-# Baza dla środowiska deweloperskiego. Docelowo dojdzie tu usługa `app`,
-# żeby całość wstawała jednym `docker compose up`.
+# Całe środowisko jedną komendą: `docker compose up`.
+#
+# Kolejność jest wymuszona warunkami `depends_on`: baza musi być zdrowa, zanim
+# ruszą migracje, a migracje muszą się zakończyć, zanim wstanie aplikacja.
+# Ten porządek nie jest kosmetyką — aplikacja startująca na nieaktualnym
+# schemacie wywraca się na pierwszym zapytaniu.
+
 services:
   db:
     image: postgres:17-alpine
@@ -18,6 +23,46 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
+
+  migrate:
+    build:
+      context: .
+      target: migrator
+    environment:
+      # Wewnątrz sieci Dockera baza nazywa się `db`, nie `localhost`.
+      DATABASE_URL: postgresql://lexalpha:lexalpha@db:5432/lexalpha?schema=public&connection_limit=5
+      # Dane demonstracyjne przy pierwszym starcie. Seed jest idempotentny
+      # (czyści i zakłada od nowa), więc powtórny start nie tworzy duplikatów.
+      SEED_ON_START: ${SEED_ON_START:-true}
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
+  app:
+    build:
+      context: .
+      target: runner
+    container_name: lexalpha-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgresql://lexalpha:lexalpha@db:5432/lexalpha?schema=public&connection_limit=5
+      # Sekrety KSeF wchodzą ze środowiska hosta — nigdy nie są wpisane tutaj
+      # ani wbudowane w obraz. Brak tokenu oznacza pracę na adapterze mock.
+      KSEF_CLIENT: ${KSEF_CLIENT:-mock}
+      KSEF_BASE_URL: ${KSEF_BASE_URL:-https://api-test.ksef.mf.gov.pl/api/v2}
+      KSEF_NIP: ${KSEF_NIP:-}
+      KSEF_TOKEN: ${KSEF_TOKEN:-}
+      SCHEDULER_TOKEN: ${SCHEDULER_TOKEN:-}
+      SCHEDULER_TIMEZONE: ${SCHEDULER_TIMEZONE:-Europe/Warsaw}
+      KSEF_SCHEDULER: ${KSEF_SCHEDULER:-}
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
 
 volumes:
   db-data:

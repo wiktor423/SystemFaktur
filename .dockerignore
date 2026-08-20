@@ -1,0 +1,23 @@
+# Wszystko, czego obraz nie potrzebuje albo czego nie wolno do niego wpuścić.
+node_modules
+.next
+.git
+.github
+
+# Sekrety — do kontenera trafiają zmiennymi środowiskowymi, nigdy warstwą obrazu.
+.env
+.env.*
+!.env.example
+secrets
+
+# Narzędzia i artefakty deweloperskie
+scripts/ksef/certs
+.claude
+.agents
+.windsurf
+skills-lock.json
+README.md
+*.log
+coverage
+playwright-report
+test-results
