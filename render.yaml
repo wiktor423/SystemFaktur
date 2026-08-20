@@ -15,6 +15,7 @@ databases:
     user: lexalpha
     plan: free
     postgresMajorVersion: "17"
+    region: frankfurt
 
 services:
   - type: web
